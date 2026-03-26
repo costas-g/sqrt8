@@ -8,6 +8,7 @@
 *.wcfg
 *.qpf
 *.qsf
+*.rtd
 *.sdc
 *.str
 *.syr
@@ -25,3 +26,6 @@ build/rebuild*.tcl
 sqrt8.pdf
 *.new
 *.old
+*.xdc
+*.tcl
+Makefile
