@@ -42,7 +42,9 @@ begin
     begin
         q_next <= Q_in_s; -- Default: keep old bits
         -- Update the specific bit corresponding to this stage
-        q_next(STAGE_ID - 1) <= not r_comb(WIDTH_R-1); -- CRITICAL PATH IMPACT -----------------------------
+        -- The correct bit value should be the inverse, i.e. `not r_comb(WIDTH_R-1)` 
+        -- If we pass it as is, we need to correct it in the logic before the CAS unit.
+        q_next(STAGE_ID - 1) <= not r_comb(WIDTH_R-1); -- Note: Possible critical path impact
     end process;
 
     -- Output Registers
@@ -51,7 +53,7 @@ begin
         if rising_edge(CLK) then
             if RST = '1' then
                 R_out_s <= (others => '0');
-                Q_out_s <= (others => '0');
+                Q_out_s <= (others => '0'); -- '0' if storing true value, '1' if storing complementary value
             else
                 R_out_s <= r_comb;
                 Q_out_s <= q_next;
