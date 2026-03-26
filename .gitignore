@@ -1,0 +1,27 @@
+# VHDL ignore
+*.o
+*.cf
+*.rpt
+*.jou
+*.log
+*.vcd
+*.wcfg
+*.qpf
+*.qsf
+*.sdc
+*.str
+*.syr
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.srcs/
+*.xpr
+*.toml
+build/rebuild*.tcl
+
+# Files
+sqrt8.pdf
+*.new
+*.old
