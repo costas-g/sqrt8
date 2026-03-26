@@ -1,31 +1,35 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
--- use std.env.all; -- Required for finish;
 
 entity tb_sqrt8 is
 end entity tb_sqrt8;
 
 architecture sim of tb_sqrt8 is
     -- Constants
-    constant CLK_PERIOD : time := 10 ns;
-    constant W_DI        : integer := 8;
-    constant W_DO        : integer := 4;
+    constant CLK_PERIOD : time    := 4 ns;
+    constant W_DI       : integer := 8;
+    constant W_DO       : integer := 4;
     
+    -- data signals
     signal clk         : std_logic := '0';
     signal rst         : std_logic := '0';
     signal input_data  : std_logic_vector(W_DI-1 downto 0) := (others => '0');
     signal input_vld   : std_logic := '0';
     signal output_data : std_logic_vector(W_DO-1 downto 0);
     signal output_vld  : std_logic;
+    
+    -- Complement output data value signal
+    signal output_data_bar : std_logic_vector(output_data'range);
 
     -- type declaration for the expected FIFO
     type data_array is array (0 to 255) of std_logic_vector(W_DO-1 downto 0);
 
-    -- signal declaration
+    -- self-check signals
     signal expected_fifo : data_array;
     signal fifo_head, fifo_tail : integer := 0;
     signal error_count : integer := 0;
+    signal hit_count   : integer := 0;
 
     -- Compute isqrt(i) for a non-negative integer input
     function compute_isqrt(i : integer) return std_logic_vector is
@@ -62,7 +66,7 @@ begin
         );
 
     -- Clock Process
-    clock_process: process is
+    clock_process: process
     begin
         clk <= '1';
         wait for CLK_PERIOD / 2;
@@ -79,9 +83,10 @@ begin
 
         -- Reset system
         rst <= '1';
-        wait for CLK_PERIOD * 10;
+        wait for 100 ns; -- Wait for device Global Set/Reset signal to be deasserted
         rst <= '0';
         wait until falling_edge(clk);
+        wait for CLK_PERIOD * 1; -- Wait a bit more before we start input
 
         report "Begin feeding input..." severity note;
         -- Feed input data
@@ -108,7 +113,7 @@ begin
     begin
         if rising_edge(clk) then
             if output_vld = '1' then
-
+                -- compare with the complement of the true computed value if we agree to store the complement of the true result
                 if output_data /= expected_fifo(fifo_head) then
                     report "Mismatch at index " & integer'image(fifo_head)
                     severity error;
@@ -117,22 +122,35 @@ begin
                     -- report "OK: index " & integer'image(fifo_head) &
                     --     " value=" & integer'image(to_integer(unsigned(output_data)))
                     -- severity note;
+                    hit_count <= hit_count + 1;
                 end if;
 
                 fifo_head <= fifo_head + 1;
-
-                -- final result when all expected values are checked
-                if fifo_head = 255 then  -- last element just processed
-                    if error_count = 0 then
-                        report "TEST PASSED" severity note;
-                    else
-                        report "TEST FAILED. Errors = " & integer'image(error_count)
-                        severity error;
-                    end if;
-                end if;
-
             end if;
         end if;
     end process;
+
+    -- Final report
+    final_report_proc : process(output_vld)
+    begin
+        -- output valid deasserted
+        if falling_edge(output_vld) then
+            report "OUTPUT VALID DEASSERTED" 
+            & LF & "Inputs = " & integer'image(fifo_tail) 
+            & LF & "Outputs = " & integer'image(fifo_head) 
+            & LF & "Hits = " & integer'image(hit_count) 
+            & LF & "Errors = " & integer'image(error_count)
+            severity note;
+
+            if error_count = 0 and hit_count = fifo_tail then
+                report "TEST PASSED" severity note;
+            else
+                report "TEST FAILED" severity error;
+            end if;
+        end if;
+    end process;
+    
+    -- Complement value of the output data signal
+    output_data_bar <= not output_data;
 
 end architecture sim;
