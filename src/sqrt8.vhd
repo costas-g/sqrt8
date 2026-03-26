@@ -32,9 +32,7 @@ architecture structural of sqrt8 is
 begin
 
     -- Stage 4 Input Initialization
---    r_pipe(NUM_STAGES)   <= '0' & INPUT_DATA; -- Initial Remainder is the Input Data zero-extended to 9 bits
---    q_pipe(NUM_STAGES)   <= (others => '0');  -- Initial Quotient intermediate results are 0
---    vld_pipe(NUM_STAGES) <= INPUT_VLD;
+    q_pipe(NUM_STAGES) <= (others => '0');  -- Initial Quotient is "0000" if using true value, "1111" otherwise.
 
     -- Generate the 4 Pipeline Stages (4 down to 1)
     GEN_PIPE: for k in NUM_STAGES downto 1 generate
@@ -60,11 +58,9 @@ begin
         if rising_edge(CLK) then
             if RST = '1' then
                 r_pipe (NUM_STAGES) <= (others => '0'); -- only reset the input register, the rest is handled by the bottom unit
-                q_pipe (NUM_STAGES) <= (others => '0'); -- only reset the input register, the rest is handled by the bottom unit
                 vld_pipe(NUM_STAGES downto 0) <= (others => '0');
             else
                 r_pipe(NUM_STAGES) <= '0' & INPUT_DATA; -- update the input register
-                q_pipe(NUM_STAGES) <= (others => '0');  -- update the input register
                 vld_pipe(NUM_STAGES downto 0) <= INPUT_VLD & vld_pipe(NUM_STAGES downto 1); -- shift the valid bit through the stages
             end if;
         end if;
