@@ -19,17 +19,32 @@ architecture sim of tb_sqrt8 is
     signal output_data : std_logic_vector(W_DO-1 downto 0);
     signal output_vld  : std_logic;
 
-begin
+    -- type declaration for the expected FIFO
+    type data_array is array (0 to 255) of std_logic_vector(W_DO-1 downto 0);
 
-    -- Clock Generation
-    clock_process: process is
+    -- signal declaration
+    signal expected_fifo : data_array;
+    signal fifo_head, fifo_tail : integer := 0;
+    signal error_count : integer := 0;
+
+    -- Compute isqrt(i) for a non-negative integer input
+    function compute_isqrt(i : integer) return std_logic_vector is
+        variable result : integer := 0;
+        variable tmp    : integer := 0;
     begin
-        clk <= '1';
-        wait for CLK_PERIOD / 2;
-        clk <= '0';
-        wait for CLK_PERIOD / 2;
-    end process clock_process;
+        -- iterative approach
+        for j in 0 to i loop
+            if j*j <= i then
+                tmp := j;
+            else
+                exit;
+            end if;
+        end loop;
+        result := tmp;
+        return std_logic_vector(to_unsigned(result, W_DO)); -- W_DO = output width
+    end function;
 
+begin
     -- Device Under Test (DUT)
     dut: entity work.sqrt8
 --        generic map (
@@ -46,10 +61,20 @@ begin
             OUTPUT_VLD  => output_vld
         );
 
+    -- Clock Process
+    clock_process: process is
+    begin
+        clk <= '1';
+        wait for CLK_PERIOD / 2;
+        clk <= '0';
+        wait for CLK_PERIOD / 2;
+    end process clock_process;    
+
+    -- Stimulus process
     stim_proc: process
     begin
         report "Simulation started..." severity note;
-        input_data <= (others => '0');
+        input_data <= (others => 'X');
         input_vld  <= '0';
 
         -- Reset system
@@ -58,49 +83,56 @@ begin
         rst <= '0';
         wait until falling_edge(clk);
 
+        report "Begin feeding input..." severity note;
         -- Feed input data
-        input_data <= std_logic_vector(to_unsigned(  0, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
-        input_data <= std_logic_vector(to_unsigned(  1, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
-        input_data <= std_logic_vector(to_unsigned(  2, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
-        input_data <= std_logic_vector(to_unsigned(  3, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
-        input_data <= std_logic_vector(to_unsigned(  4, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
-        input_data <= std_logic_vector(to_unsigned(  7, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
-        input_data <= std_logic_vector(to_unsigned( 15, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
-        input_data <= std_logic_vector(to_unsigned( 16, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
-        input_data <= std_logic_vector(to_unsigned(255, W_DI)); input_vld  <= '1'; wait for CLK_PERIOD;
+        for i in 0 to 255 loop
+            -- drive input
+            input_data <= std_logic_vector(to_unsigned(i, W_DI));
+            input_vld  <= '1';
 
-        -- Stop valid data
+            -- push expected result
+            expected_fifo(fifo_tail) <= compute_isqrt(i);
+            fifo_tail <= fifo_tail + 1;
+            wait for CLK_PERIOD;
+        end loop;
+
+        -- deassert valid after last input
         input_vld  <= '0';
-        wait for CLK_PERIOD; 
-        
-        -- Monitor results (4-cycle latency)
-        -- TODO: add a simple self-checking mechanism for each input (maybe with PROCEDURE)
-        -- report "Starting result verification..." severity note;
 
-        -- -- Check for 7 -> 2
-        -- wait until rising_edge(clk);
-        -- assert (output_vld = '1' and to_integer(unsigned(output_data)) = 2)
-        --     report "Error: 7 should result in 2" severity error;
-
-        -- -- Check for 80 -> 8
-        -- wait until rising_edge(clk);
-        -- assert (output_vld = '1' and to_integer(unsigned(output_data)) = 8)
-        --     report "Error: 80 should result in 8" severity error;
-
-        -- -- Check for 255 -> 15
-        -- wait until rising_edge(clk);
-        -- assert (output_vld = '1' and to_integer(unsigned(output_data)) = 15)
-        --     report "Error: 255 should result in 15" severity error;
-
-        -- -- Check that Valid goes low
-        -- wait until rising_edge(clk);
-        -- assert (output_vld = '0')
-        --     report "Error: Output Valid should have gone low" severity error;
-
-        -- report "All tests passed!" severity note;
-        report "Simulation completed" severity note;
+        report "End feeding input." severity note;
         wait;
-        -- finish;
+    end process;
+
+    -- Self-check process
+    check_proc : process(clk)
+    begin
+        if rising_edge(clk) then
+            if output_vld = '1' then
+
+                if output_data /= expected_fifo(fifo_head) then
+                    report "Mismatch at index " & integer'image(fifo_head)
+                    severity error;
+                    error_count <= error_count + 1;
+                else
+                    -- report "OK: index " & integer'image(fifo_head) &
+                    --     " value=" & integer'image(to_integer(unsigned(output_data)))
+                    -- severity note;
+                end if;
+
+                fifo_head <= fifo_head + 1;
+
+                -- final result when all expected values are checked
+                if fifo_head = 255 then  -- last element just processed
+                    if error_count = 0 then
+                        report "TEST PASSED" severity note;
+                    else
+                        report "TEST FAILED. Errors = " & integer'image(error_count)
+                        severity error;
+                    end if;
+                end if;
+
+            end if;
+        end if;
     end process;
 
 end architecture sim;
