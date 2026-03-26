@@ -23,7 +23,7 @@ architecture behavioral of sqrt8_logic is
 begin
 
     -- Zero-extend Q_in to avoid null-range in the first stage
-    Q_s <= '0' & Q_in;
+    Q_s <= "0" & Q_in; -- Invert the Q_in if we agree to store the inverse of the true result
 
     process(Q_s, R_in)
         -- Indices calculated 
@@ -42,7 +42,7 @@ begin
     end process;
 
     -- Arithmetic Core
-    sub_control <= not R_in(WIDTH_R-1); -- the sign bit controls the CAS unit
+    sub_control <= R_in(WIDTH_R-1); -- the sign bit controls the CAS unit
     
     CAS_INST : entity work.cas_unit
         generic map (WIDTH => WIDTH_R)
