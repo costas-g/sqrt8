@@ -104,13 +104,13 @@ $$
 However, if $R_k - \left(2^kQ_k + 2^{2k-2}\right) < 0$, then $q_{k-1}=0$ 
 and so it will follow that $Q_{k-1}=Q_k$ and $R_{k-1}=R_k$. 
 
-Summarizing, if we know $Q_k$, then we can deduce $q_{k-1} by
+Summarizing, if we know $Q_k$, then we can deduce $q_{k-1}$ by
 
 $$
 q_{k-1} = 
 \begin{cases}
-0,  & R_k - \left(2^kQ_k + 2^{2k-2}\right) < 0 \\
-1,  & R_k - \left(2^kQ_k + 2^{2k-2}\right) \ge 0
+0,  & \text{if} \quad R_k - \left(2^kQ_k + 2^{2k-2}\right) < 0 \\
+1,  & \text{if} \quad R_k - \left(2^kQ_k + 2^{2k-2}\right) \ge 0
 \end{cases}
 $$
 
@@ -133,7 +133,7 @@ However, if $R_{k-1} < 0$, then $R_{k-2}$ will be
 
 $$R_{k-2} = R_{k-1} + \left(2^kQ_k + 2^{2k-2}\right) - \left(2^{k-1}Q_{k-1} + 2^{2\left({k-1}\right)-2}\right)$$
 
-That is, we added back the term $\left(2^kQ_k + 2^{2k-2}\right)$ to get back the previous non-negative remainder $R_k$ and then subtracted the familiar $\left(2^{k-1}Q_{k-1} + 2^{2\left({k-1}\right)-2}\right)$ term. Since $R_{k-1} < 0$, then $Q_{k-1}=Q_k$, as we have established. Then, we can simplify the above equation as follows:
+That is, we added back the term $\left(2^kQ_k + 2^{2k-2}\right)$ to get back the previous non-negative remainder $R_k$, and then subtracted the familiar $\left(2^{k-1}Q_{k-1} + 2^{2\left({k-1}\right)-2}\right)$ term. Since $R_{k-1} < 0$, then $Q_{k-1}=Q_k$, as we have established. Then, we can simplify the above equation as follows:
 
 $$
 \begin{aligned}
@@ -149,8 +149,8 @@ Therefore, we can summarize that for any $k>0$, $R_{k-1}$ will be:
 $$
 R_{k-1} = 
 \begin{cases}
-R_{k} - \left(2^{k}Q_{k} + 2^{2{k}-2}\right),  & \text{if } R_k \ge 0 \\
-R_{k} + \left(2^{k}Q_{k} + 3\times 2^{2{k}-2}\right),  & \text{if } R_k < 0 
+R_{k} - \left(2^{k}Q_{k} + 2^{2{k}-2}\right),  & \text{if} \quad R_k \ge 0 \\
+R_{k} + \left(2^{k}Q_{k} + 3\times 2^{2{k}-2}\right),  & \text{if} \quad R_k < 0 
 \end{cases}
 $$
 
@@ -159,8 +159,8 @@ We may now define the *Trial Divisor* $T_k$, for any $k>0$, as:
 $$
 T_{k} = 
 \begin{cases}
-2^{k}Q_{k} + 2^{2{k}-2},  & \text{if } R_k \ge 0 \\
-2^{k}Q_{k} + 3\times 2^{2{k}-2},  & \text{if } R_k < 0 
+2^{k}Q_{k} + 2^{2{k}-2},  & \text{if} \quad R_k \ge 0 \\
+2^{k}Q_{k} + 3\times 2^{2{k}-2},  & \text{if} \quad R_k < 0 
 \end{cases}
 $$
 
@@ -169,8 +169,8 @@ and so
 $$
 R_{k-1} = 
 \begin{cases}
-R_{k} - T_k,  & \text{if } R_k \ge 0 \\
-R_{k} + T_k,  & \text{if } R_k < 0 
+R_{k} - T_k,  & \text{if} \quad R_k \ge 0 \\
+R_{k} + T_k,  & \text{if} \quad R_k < 0 
 \end{cases}
 $$
 
@@ -187,8 +187,8 @@ If we define the function $\text{sign}\left(i\right)$ as
 $$
 \text{sign}\left(i\right) = 
 \begin{cases}
-0,  & \text{if } i \ge 0 \\
-1,  & \text{if } i < 0 
+0,  & \text{if} \quad i \ge 0 \\
+1,  & \text{if} \quad i < 0 
 \end{cases}
 $$
 
@@ -212,7 +212,7 @@ for any number $A$ with a binary representation
 
 $$A=a_{N}2^N+a_{N-1}2^{N-1}+\dots+a_j2^j+\dots+a_i2^i+\dots+a_02^0$$
 
-we define the vector and component
+we define the vector $A[j:i]$ and component $A[i]$ as
 
 $$
 \begin{aligned}
