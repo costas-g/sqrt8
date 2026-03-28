@@ -7,7 +7,7 @@ end entity tb_sqrt8;
 
 architecture sim of tb_sqrt8 is
     -- Constants
-    constant CLK_PERIOD : time    := 4 ns;
+    constant CLK_PERIOD : time    := 3.710 ns;
     constant W_DI       : integer := 8;
     constant W_DO       : integer := 4;
     
@@ -20,7 +20,7 @@ architecture sim of tb_sqrt8 is
     signal output_vld  : std_logic;
     
     -- Complement output data value signal
-    signal output_data_bar : std_logic_vector(output_data'range);
+    -- signal output_data_bar : std_logic_vector(output_data'range);
 
     -- type declaration for the expected FIFO
     type data_array is array (0 to 255) of std_logic_vector(W_DO-1 downto 0);
@@ -76,6 +76,8 @@ begin
 
     -- Stimulus process
     stim_proc: process
+    variable idx       : integer := 0;
+    variable prime_num : integer := 101;
     begin
         report "Simulation started..." severity note;
         input_data <= (others => 'X');
@@ -85,33 +87,45 @@ begin
         rst <= '1';
         wait for 100 ns; -- Wait for device Global Set/Reset signal to be deasserted
         rst <= '0';
-        wait until falling_edge(clk);
+        wait until falling_edge(clk); -- drive inputs on falling edge
         wait for CLK_PERIOD * 1; -- Wait a bit more before we start input
 
         report "Begin feeding input..." severity note;
         -- Feed input data
         for i in 0 to 255 loop
+            -- Jump by a prime number to hit every index once
+            idx := (i * prime_num) mod 256;
+            
             -- drive input
-            input_data <= std_logic_vector(to_unsigned(i, W_DI));
+            input_data <= std_logic_vector(to_unsigned(idx, W_DI));
             input_vld  <= '1';
-
-            -- push expected result
-            expected_fifo(fifo_tail) <= compute_isqrt(i);
-            fifo_tail <= fifo_tail + 1;
+            
             wait for CLK_PERIOD;
         end loop;
 
         -- deassert valid after last input
         input_vld  <= '0';
 
-        report "End feeding input." severity note;
+        report "Finished feeding input." severity note;
         wait;
+    end process;
+    
+    -- Push expected results process
+    push_expected_proc: process(clk)
+    begin
+        -- push expected result
+        if rising_edge(clk) then -- push expected on successful rising edge
+            if input_vld = '1' and rst = '0' then
+                expected_fifo(fifo_tail) <= compute_isqrt(to_integer(unsigned(input_data)));
+                fifo_tail <= fifo_tail + 1;
+            end if;
+        end if;
     end process;
 
     -- Self-check process
     check_proc : process(clk)
     begin
-        if rising_edge(clk) then
+        if falling_edge(clk) then
             if output_vld = '1' then
                 -- compare with the complement of the true computed value if we agree to store the complement of the true result
                 if output_data /= expected_fifo(fifo_head) then
@@ -151,6 +165,6 @@ begin
     end process;
     
     -- Complement value of the output data signal
-    output_data_bar <= not output_data;
+    -- output_data_bar <= not output_data;
 
 end architecture sim;
