@@ -37,14 +37,14 @@ after consulting the mathematical proof of the algorithm.
 - Clock period target: 10 ns
 - Worst Negative Slack (WNS): 6.355 ns 
 - Max frequency achieved: 250 Hz (clock period: 4 ns) -->
-|          Parameter         |         Value                   |
-| --------------------------:|:------------------------------- |
-| Device                     | Zynq-7000 (xc7z020clg484-1)     |
-| Clock period target        | 3.330 ns                        |
-| Worst Negative Slack (WNS) | 0.079 ns                        |
-| Max frequency achieved     | 269 Hz (clock period: 3.710 ns) |
-| Number of FFs              | 49                              |
-| Number of LUTs             | 41                              |
+|          Parameter         |         Value                    |
+| --------------------------:|:-------------------------------  |
+| Device                     | Zynq-7000 (xc7z020clg484-1)      |
+| Clock period target        | 3.330 ns                         |
+| Worst Negative Slack (WNS) | 0.079 ns                         |
+| Max frequency achieved     | 269 MHz (clock period: 3.710 ns) |
+| Number of FFs              | 49                               |
+| Number of LUTs             | 41                               |
 
 ## Algorithm: Binary Digit-by-Digit calculation
 ### Problem: Integer square root
