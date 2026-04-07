@@ -19,13 +19,13 @@
 *.sim/
 *.srcs/
 *.xpr
-*.toml
+# *.toml
 build/rebuild*.tcl
 
 # Files
 sqrt8.pdf
 *.new
 *.old
-*.xdc
-*.tcl
-Makefile
+# *.xdc
+# *.tcl
+# Makefile
